@@ -31,15 +31,33 @@ class S3Service:
         except Exception as error:
             print(f"error {error}while uploading")
 
-    def get_filtered_objects(self, pattern: str) -> None:
-        files = [
+    def filter_objects(self, pattern: str) -> list[str]:
+        return [
             item["Key"][len(self.config.DIRECTORY) + 1 :]
             for item in self._client.list_objects_v2(
                 Bucket=self.config.BUCKET_NAME, Prefix=self.config.DIRECTORY
             )["Contents"]
             if re.match(pattern, item["Key"][len(self.config.DIRECTORY) + 1 :])
         ]
+
+    def get_filtered_objects(self, pattern: str) -> None:
+        files = self.filter_objects(pattern)
         if files:
             print(files)
         else:
             print(f"no files found for {pattern} filter ")
+
+    def delete_filtered_objects(self, pattern: str) -> None:
+        matched_objects = self.filter_objects(pattern)
+        if matched_objects:
+            for object in matched_objects:
+                try:
+                    self._client.delete_object(
+                        Bucket=self.config.BUCKET_NAME,
+                        Key=f"{self.config.DIRECTORY}/{object}",
+                    )
+                    print(f"file {object} deleted")
+                except Exception as error:
+                    print(f"error occured while  deleting file {object}: {error}")
+        else:
+            print("no files found for the given pattern")
