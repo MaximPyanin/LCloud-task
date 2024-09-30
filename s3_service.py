@@ -1,5 +1,6 @@
 import boto3
 from config_service import AppConfig
+import re
 
 
 class S3Service:
@@ -29,3 +30,16 @@ class S3Service:
             print(f"file uploaded to {key}")
         except Exception as error:
             print(f"error {error}while uploading")
+
+    def get_filtered_objects(self, pattern: str) -> None:
+        files = [
+            item["Key"][len(self.config.DIRECTORY) + 1 :]
+            for item in self._client.list_objects_v2(
+                Bucket=self.config.BUCKET_NAME, Prefix=self.config.DIRECTORY
+            )["Contents"]
+            if re.match(pattern, item["Key"][len(self.config.DIRECTORY) + 1 :])
+        ]
+        if files:
+            print(files)
+        else:
+            print(f"no files found for {pattern} filter ")
