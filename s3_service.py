@@ -11,7 +11,7 @@ class S3Service:
             aws_secret_access_key=self.config.AWS_SECRET_ACCESS_KEY,
         )
 
-    def get_objects(self):
+    def get_objects(self) -> None:
         response = self._client.list_objects_v2(
             Bucket=self.config.BUCKET_NAME, Prefix=self.config.DIRECTORY
         )
@@ -20,3 +20,12 @@ class S3Service:
                 print(item["Key"])
         else:
             print("No files found")
+
+    def upload_file(self, filepath: str, key: str) -> None:
+        try:
+            self._client.upload_file(
+                filepath, self.config.BUCKET_NAME, f"{self.config.DIRECTORY}/{key}"
+            )
+            print(f"file uploaded to {key}")
+        except Exception as error:
+            print(f"error {error}while uploading")
